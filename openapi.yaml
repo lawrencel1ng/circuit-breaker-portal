@@ -1,0 +1,598 @@
+openapi: 3.0.3
+info:
+  title: F5 Automation Control Center API
+  description: |
+    Comprehensive API for managing F5 BIG-IP infrastructure including circuit breakers, 
+    deployments, auto-scaling, multi-cloud routing, certificates, and more.
+  version: 1.0.0
+  contact:
+    name: F5 Control Center Support
+    email: support@f5controlcenter.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://api.f5controlcenter.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Circuit Breakers
+    description: Circuit breaker management and control
+  - name: Deployments
+    description: Application deployment management
+  - name: Blue/Green
+    description: Blue/Green deployment operations
+  - name: Multi-Cloud
+    description: Multi-cloud traffic management
+  - name: Auto-Scaling
+    description: Auto-scaling policies and operations
+  - name: Certificates
+    description: SSL/TLS certificate lifecycle management
+  - name: SWG
+    description: Secure Web Gateway configuration
+  - name: Drift Detection
+    description: Configuration drift detection and remediation
+  - name: Backup & DR
+    description: Backup management and disaster recovery
+  - name: WebSocket
+    description: Real-time updates via WebSocket
+
+paths:
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: User logout
+      responses:
+        200:
+          description: Logout successful
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      responses:
+        200:
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /lanes/{id}:
+    put:
+      tags: [Circuit Breakers]
+      summary: Update lane status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                edgeStatus:
+                  type: string
+                  enum: [active, inactive, closed]
+                enterpriseStatus:
+                  type: string
+                  enum: [active, inactive, closed]
+      responses:
+        200:
+          description: Lane updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lane'
+
+  /deployments:
+    get:
+      tags: [Deployments]
+      summary: List deployments
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deployment'
+
+    post:
+      tags: [Deployments]
+      summary: Create deployment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentRequest'
+      responses:
+        201:
+          description: Deployment created
+
+  /blue-green:
+    get:
+      tags: [Blue/Green]
+      summary: List blue/green deployments
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BlueGreenDeployment'
+
+    post:
+      tags: [Blue/Green]
+      summary: Create blue/green deployment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlueGreenDeploymentRequest'
+      responses:
+        201:
+          description: Deployment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlueGreenDeployment'
+
+  /blue-green/{id}:
+    get:
+      tags: [Blue/Green]
+      summary: Get deployment details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Deployment details
+
+    post:
+      tags: [Blue/Green]
+      summary: Execute deployment action
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [start, cancel, rollback, shift-traffic, health-check]
+      responses:
+        200:
+          description: Action executed
+
+  /cloud:
+    get:
+      tags: [Multi-Cloud]
+      summary: Get cloud configuration
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [providers, regions, rules, policy, distribution, metrics, health, stats]
+      responses:
+        200:
+          description: Cloud configuration
+          content:
+            application/json:
+              schema:
+                type: object
+
+    post:
+      tags: [Multi-Cloud]
+      summary: Execute cloud action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create-rule, update-rule, delete-rule, update-distribution, trigger-failover]
+      responses:
+        200:
+          description: Action executed
+
+  /autoscaling:
+    get:
+      tags: [Auto-Scaling]
+      summary: Get auto-scaling data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [policies, pool-members, events, metrics, recommendations, forecast, stats]
+      responses:
+        200:
+          description: Auto-scaling data
+
+    post:
+      tags: [Auto-Scaling]
+      summary: Execute scaling action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create-policy, scale-out, scale-in]
+      responses:
+        200:
+          description: Action executed
+
+  /certificates:
+    get:
+      tags: [Certificates]
+      summary: Get certificate data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [search, expiring, compliance, stats]
+      responses:
+        200:
+          description: Certificate data
+
+    post:
+      tags: [Certificates]
+      summary: Execute certificate action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create, renew, renew-all, deploy, order-letsencrypt]
+      responses:
+        200:
+          description: Action executed
+
+  /drift:
+    get:
+      tags: [Drift Detection]
+      summary: Get drift detection data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [detections, reports, active-drifts, snapshots, stats]
+      responses:
+        200:
+          description: Drift detection data
+
+    post:
+      tags: [Drift Detection]
+      summary: Execute drift action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create-detection, run-detection, remediate, create-snapshot]
+      responses:
+        200:
+          description: Action executed
+
+  /backup:
+    get:
+      tags: [Backup & DR]
+      summary: Get backup data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [backups, destinations, schedules, restores, dr-plans, stats, health]
+      responses:
+        200:
+          description: Backup data
+
+    post:
+      tags: [Backup & DR]
+      summary: Execute backup action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create-backup, create-restore, execute-dr-plan, test-dr-plan]
+      responses:
+        200:
+          description: Action executed
+
+  /ws:
+    get:
+      tags: [WebSocket]
+      summary: WebSocket connection endpoint
+      description: |
+        Upgrade to WebSocket connection for real-time updates.
+        
+        Available channels:
+        - `deployments` - Deployment progress updates
+        - `circuit-breakers` - Circuit breaker status changes
+        - `scaling` - Auto-scaling events
+        - `metrics` - Real-time metrics
+        - `alerts` - System alerts
+        - `certificates` - Certificate expiry warnings
+        - `traffic` - Traffic distribution updates
+        - `system` - System status updates
+        - `all` - All channels
+        
+        Message format:
+        ```json
+        {
+          "type": "deployment_update",
+          "timestamp": "2024-01-15T10:30:00Z",
+          "data": { ... }
+        }
+        ```
+      security:
+        - bearerAuth: []
+      responses:
+        101:
+          description: WebSocket upgrade successful
+        426:
+          description: Upgrade required
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+
+    Lane:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        edgeStatus:
+          type: string
+          enum: [active, inactive, closed]
+        enterpriseStatus:
+          type: string
+          enum: [active, inactive, closed]
+        healthStatus:
+          type: string
+          enum: [healthy, degraded, down]
+
+    Deployment:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [running, stopped, deploying, standby]
+
+    DeploymentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        servers:
+          type: array
+          items:
+            type: object
+
+    BlueGreenDeployment:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [idle, deploying, health_check, shifting, completed, failed, rolling_back]
+        progress:
+          type: integer
+        trafficSplit:
+          type: integer
+        blueLane:
+          $ref: '#/components/schemas/LaneConfig'
+        greenLane:
+          $ref: '#/components/schemas/LaneConfig'
+
+    BlueGreenDeploymentRequest:
+      type: object
+      required: [name, applicationId, applicationName, blueLane, greenLane]
+      properties:
+        name:
+          type: string
+        applicationId:
+          type: string
+        applicationName:
+          type: string
+        blueLane:
+          $ref: '#/components/schemas/LaneConfig'
+        greenLane:
+          $ref: '#/components/schemas/LaneConfig'
+        activeLane:
+          type: string
+          enum: [blue, green]
+        config:
+          type: object
+
+    LaneConfig:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        targetVersion:
+          type: string
+        healthStatus:
+          type: string
+        serverCount:
+          type: integer
+        healthyServerCount:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: integer

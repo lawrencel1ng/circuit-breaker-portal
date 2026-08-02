@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Application {
+  id                   String    @id @default(uuid())
+  name                 String
+  description          String
+  deployedLanes        String
+  deploymentType       String?   // 'Virtual Servers' | 'Pool Members' | 'Wide IPs'
+  status               String    // 'deployed' | 'deploying' | 'failed' | 'running'
+  createdAt            DateTime  @default(now())
+  version              String?
+  lastDeployed         DateTime?
+  health               String?   // 'healthy' | 'unhealthy' | 'degraded'
+  plannedExecutionTime DateTime?
+  deployments          Deployment[]
+}
+
+model Deployment {
+  id            String      @id @default(uuid())
+  name          String
+  status        String      // 'running' | 'stopped' | 'deploying' | 'standby'
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  servers       String        // JSON string of Server objects
+}
+
+model Lane {
+  id                       String @id @default(uuid())
+  name                     String
+  edgeStatus               String // 'active' | 'inactive' | 'closed'
+  enterpriseStatus         String // 'active' | 'inactive' | 'closed'
+  edgeLoadBalancer         String   // JSON string of LoadBalancerConfig
+  enterpriseLoadBalancer   String   // JSON string of LoadBalancerConfig
+  edgeCircuitBreaker       String   // JSON string of CircuitBreakerGSLBConfig
+  enterpriseCircuitBreaker String   // JSON string of CircuitBreakerGSLBConfig
+  trafficDistribution      Int
+  healthStatus             String // 'healthy' | 'degraded' | 'down'
+}
+
+model ApprovalRequest {
+  id          String   @id @default(uuid())
+  type        String
+  title       String
+  description String
+  requester   String
+  status      String   // 'pending' | 'approved' | 'rejected'
+  timestamp   DateTime @default(now())
+  comments    String?    // JSON string of comments
+  data        String     // JSON string - The payload (Application data etc)
+}
+
+model WorkflowRule {
+  id               String  @id @default(uuid())
+  name             String
+  actionType       String  @unique
+  requiresApproval Boolean
+  approverRole     String
+  description      String
+}
+
+model ChangeWindow {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // 'allowed' | 'restricted'
+  dayOfWeek   Int?     // 0-6
+  startTime   String   // HH:mm
+  endTime     String   // HH:mm
+  isActive    Boolean  @default(true)
+  description String?
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  type      String   // 'automation' | 'app' | 'audit'
+  level     String?  // 'info' | 'error' | 'warning'
+  component String?
+  action    String?
+  user      String?
+  message   String?
+  details   String?  // JSON string
+  status    String?  // 'success' | 'error' | 'warning'
+  lane      String?
+}
+
+model GlobalSettings {
+  id                      String  @id @default("default")
+  dnsServer               String
+  ntpServer               String
+  syslogServer            String
+  healthCheckInterval     Int
+  circuitBreakerThreshold Int
+  autoFailoverEnabled     Boolean
+}
+
+model AlertConfig {
+  id       String  @id @default("default")
+  enabled  Boolean
+  channels String    // JSON string of AlertChannel[]
+  rules    String    // JSON string of AlertRule[]
+}
+
+model SystemSettings {
+  id                 String  @id @default("default")
+  maintenanceMode    Boolean
+  maintenanceMessage String
+  systemName         String
+  dataRetentionDays  Int
+  theme              String
+}
+
+// User Management
+model User {
+  id            String    @id @default(uuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String    // bcrypt hash
+  firstName     String?
+  lastName      String?
+  roles         String    // JSON array of roles
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  
+  @@index([username])
+  @@index([email])
+}
+
+model Session {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token         String    @unique
+  refreshToken  String    @unique
+  ipAddress     String?
+  userAgent     String?
+  expiresAt     DateTime
+  lastActivity  DateTime  @default(now())
+  isValid       Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@index([refreshToken])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now())
+  type        String   // 'auth', 'deployment', 'config', etc.
+  action      String   // 'login', 'logout', 'deploy', etc.
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  username    String?
+  ipAddress   String?
+  userAgent   String?
+  resource    String?  // e.g., 'lane', 'deployment'
+  resourceId  String?
+  status      String   // 'success', 'failure'
+  message     String?
+  details     String?  // JSON
+  riskScore   Int?
+  
+  @@index([timestamp])
+  @@index([userId])
+  @@index([type])
+  @@index([action])
+}
+
+// SWG (Secure Web Gateway) Models
+model SWGConfig {
+  id           String   @id @default("default")
+  proxyIp      String   @default("10.1.10.51")
+  proxyPort    Int      @default(8080)
+  proxyEnabled Boolean  @default(true)
+  vlans        String   @default("[\"vlan30\",\"vlan40\"]") // JSON array
+  
+  // SSL Configuration
+  sslIntercept Boolean @default(true)
+  caCert       String?  // CA certificate name/reference
+  bypassList   String  @default("[]") // JSON array of URLs to bypass
+  
+  // Authentication
+  authEnabled  Boolean @default(true)
+  authScheme   String  @default("ntlm") // ntlm, kerberos, basic, ldap, saml
+  authRealm    String  @default("CORP.LOCAL")
+  ldapConfig   String? // JSON object with LDAP settings
+  
+  // Logging
+  logEnabled   Boolean @default(true)
+  logLevel     String  @default("info") // info, debug, error
+  logDest      String  @default("local") // local, remote
+  
+  // SIEM Integration
+  siemEnabled  Boolean @default(false)
+  siemServerIp String?
+  siemPort     Int     @default(514)
+  siemProtocol String  @default("udp") // udp, tcp, tls
+  siemFormat   String  @default("cef") // cef, leef, syslog
+  
+  // ICAP Integration
+  icapEnabled   Boolean @default(false)
+  icapServerUri String?
+  icapPreview   Int     @default(1024)
+  icapFailOpen  Boolean @default(true)
+  
+  // Block Pages
+  blockPageTemplate String  @default("<h1>Access Denied</h1>")
+  blockPageEmail    String  @default("security@bank.com")
+  showCategory      Boolean @default(true)
+  showIP            Boolean @default(true)
+  
+  // Threat Intelligence
+  threatFeedsEnabled    Boolean @default(true)
+  threatFeedsInterval   String  @default("daily")
+  threatFeedsLicenseKey String?
+  threatFeedsLastUpdate DateTime?
+  threatFeedsStatus     String  @default("active")
+  
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model SWGBlockedUrl {
+  id        String   @id @default(uuid())
+  url       String
+  group     String   @default("dg-blocked-urls") // dg-blocked-urls, dg-malware-sites, dg-phishing-sites
+  addedBy   String?
+  addedAt   DateTime @default(now())
+  
+  @@unique([url, group])
+  @@index([group])
+}
+
+model SWGCategory {
+  id     String @id @default(uuid())
+  name   String @unique
+  status String @default("allowed") // allowed, blocked
+  count  Int    @default(0)
+}
+
+model SWGPolicy {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  layer       String      @default("layer3") // layer2 (SSLO), layer3 (SWG)
+  enabled     Boolean     @default(true)
+  rules       SWGPolicyRule[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model SWGPolicyRule {
+  id       String @id @default(uuid())
+  policyId String
+  policy   SWGPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  
+  name      String
+  enabled   Boolean @default(true)
+  priority  Int     @default(0) // Rule order
+  
+  // Condition
+  conditionType     String // TLS_ClientHello, HTTP_URI, Category, User_ID, Source_IP
+  conditionOperator String // equals, contains, substring
+  conditionValue    String
+  
+  // Action
+  action String @default("allow") // allow, reject, intercept, bypass
+  
+  // Logging
+  logEnabled Boolean @default(true)
+  
+  @@index([policyId])
+  @@index([priority])
+}
+
+model SWGSession {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  user      String
+  clientIp  String
+  vsName    String?  // Virtual Server name
+  startTime DateTime @default(now())
+  lastSeen  DateTime @updatedAt
+  traffic   Int      @default(0) // Bytes transferred
+  status    String   @default("active") // active, closed
+  
+  @@index([status])
+  @@index([lastSeen])
+  @@index([user])
+}
+
+model SWGAccessLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  clientIp  String
+  user      String?
+  method    String   // GET, POST, CONNECT, etc.
+  url       String
+  action    String   // allow, block, bypass
+  rule      String?  // Rule name that matched
+  category  String?
+  bytesIn   Int      @default(0)
+  bytesOut  Int      @default(0)
+  duration  Int      @default(0) // milliseconds
+  
+  @@index([timestamp])
+  @@index([clientIp])
+  @@index([action])
+}

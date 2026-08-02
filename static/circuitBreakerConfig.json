@@ -1,0 +1,437 @@
+{
+  "lanes": [
+    {
+      "id": "lane1",
+      "name": "Lane 1",
+      "edgeStatus": "active",
+      "enterpriseStatus": "active",
+      "edgeLoadBalancer": {
+        "virtualServers": [
+          {
+            "name": "vs-edge-lane1",
+            "ip": "10.1.1.10",
+            "port": 80,
+            "status": "enabled"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-edge-lane1",
+            "members": [
+              {
+                "name": "edge-server-1",
+                "ip": "10.1.1.11",
+                "port": 80,
+                "status": "enabled"
+              },
+              {
+                "name": "edge-server-2",
+                "ip": "10.1.1.12",
+                "port": 80,
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "enterpriseLoadBalancer": {
+        "virtualServers": [
+          {
+            "name": "vs-enterprise-lane1",
+            "ip": "10.1.2.10",
+            "port": 80,
+            "status": "enabled"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-enterprise-lane1",
+            "members": [
+              {
+                "name": "enterprise-server-1",
+                "ip": "10.1.2.11",
+                "port": 80,
+                "status": "enabled"
+              },
+              {
+                "name": "enterprise-server-2",
+                "ip": "10.1.2.12",
+                "port": 80,
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "edgeCircuitBreaker": {
+        "wideIPs": [
+          {
+            "name": "wideip-edge-lane1",
+            "domain": "app-lane1.ocbc.com",
+            "status": "active"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-gslb-edge-lane1",
+            "members": [
+              {
+                "name": "edge-lane1-member",
+                "ip": "10.1.1.10",
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "enterpriseCircuitBreaker": {
+        "wideIPs": [
+          {
+            "name": "wideip-enterprise-lane1",
+            "domain": "api-lane1.ocbc.com",
+            "status": "active"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-gslb-enterprise-lane1",
+            "members": [
+              {
+                "name": "enterprise-lane1-member",
+                "ip": "10.1.2.10",
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "deployments": [
+        {
+          "id": "dep1",
+          "name": "Enterprise #1",
+          "servers": [
+            {
+              "name": "server-1",
+              "ip": "10.1.2.11",
+              "status": "running",
+              "health": "healthy"
+            },
+            {
+              "name": "server-2",
+              "ip": "10.1.2.12",
+              "status": "running",
+              "health": "healthy"
+            }
+          ],
+          "status": "running"
+        }
+      ],
+      "trafficDistribution": 33.3,
+      "healthStatus": "healthy"
+    },
+    {
+      "id": "lane2",
+      "name": "Lane 2",
+      "edgeStatus": "active",
+      "enterpriseStatus": "active",
+      "edgeLoadBalancer": {
+        "virtualServers": [
+          {
+            "name": "vs-edge-lane2",
+            "ip": "10.2.1.10",
+            "port": 80,
+            "status": "enabled"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-edge-lane2",
+            "members": [
+              {
+                "name": "edge-server-1",
+                "ip": "10.2.1.11",
+                "port": 80,
+                "status": "enabled"
+              },
+              {
+                "name": "edge-server-2",
+                "ip": "10.2.1.12",
+                "port": 80,
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "enterpriseLoadBalancer": {
+        "virtualServers": [
+          {
+            "name": "vs-enterprise-lane2",
+            "ip": "10.2.2.10",
+            "port": 80,
+            "status": "enabled"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-enterprise-lane2",
+            "members": [
+              {
+                "name": "enterprise-server-1",
+                "ip": "10.2.2.11",
+                "port": 80,
+                "status": "enabled"
+              },
+              {
+                "name": "enterprise-server-2",
+                "ip": "10.2.2.12",
+                "port": 80,
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "edgeCircuitBreaker": {
+        "wideIPs": [
+          {
+            "name": "wideip-edge-lane2",
+            "domain": "app-lane2.ocbc.com",
+            "status": "active"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-gslb-edge-lane2",
+            "members": [
+              {
+                "name": "edge-lane2-member",
+                "ip": "10.2.1.10",
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "enterpriseCircuitBreaker": {
+        "wideIPs": [
+          {
+            "name": "wideip-enterprise-lane2",
+            "domain": "api-lane2.ocbc.com",
+            "status": "active"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-gslb-enterprise-lane2",
+            "members": [
+              {
+                "name": "enterprise-lane2-member",
+                "ip": "10.2.2.10",
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "deployments": [
+        {
+          "id": "dep2",
+          "name": "Enterprise #2",
+          "servers": [
+            {
+              "name": "server-1",
+              "ip": "10.2.2.11",
+              "status": "running",
+              "health": "healthy"
+            },
+            {
+              "name": "server-2",
+              "ip": "10.2.2.12",
+              "status": "running",
+              "health": "healthy"
+            }
+          ],
+          "status": "running"
+        }
+      ],
+      "trafficDistribution": 33.3,
+      "healthStatus": "healthy"
+    },
+    {
+      "id": "lane3",
+      "name": "Lane 3",
+      "edgeStatus": "active",
+      "enterpriseStatus": "active",
+      "edgeLoadBalancer": {
+        "virtualServers": [
+          {
+            "name": "vs-edge-lane3",
+            "ip": "10.3.1.10",
+            "port": 80,
+            "status": "enabled"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-edge-lane3",
+            "members": [
+              {
+                "name": "edge-server-1",
+                "ip": "10.3.1.11",
+                "port": 80,
+                "status": "enabled"
+              },
+              {
+                "name": "edge-server-2",
+                "ip": "10.3.1.12",
+                "port": 80,
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "enterpriseLoadBalancer": {
+        "virtualServers": [
+          {
+            "name": "vs-enterprise-lane3",
+            "ip": "10.3.2.10",
+            "port": 80,
+            "status": "enabled"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-enterprise-lane3",
+            "members": [
+              {
+                "name": "enterprise-server-1",
+                "ip": "10.3.2.11",
+                "port": 80,
+                "status": "enabled"
+              },
+              {
+                "name": "enterprise-server-2",
+                "ip": "10.3.2.12",
+                "port": 80,
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "edgeCircuitBreaker": {
+        "wideIPs": [
+          {
+            "name": "wideip-edge-lane3",
+            "domain": "app-lane3.ocbc.com",
+            "status": "active"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-gslb-edge-lane3",
+            "members": [
+              {
+                "name": "edge-lane3-member",
+                "ip": "10.3.1.10",
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "enterpriseCircuitBreaker": {
+        "wideIPs": [
+          {
+            "name": "wideip-enterprise-lane3",
+            "domain": "api-lane3.ocbc.com",
+            "status": "active"
+          }
+        ],
+        "pools": [
+          {
+            "name": "pool-gslb-enterprise-lane3",
+            "members": [
+              {
+                "name": "enterprise-lane3-member",
+                "ip": "10.3.2.10",
+                "status": "enabled"
+              }
+            ]
+          }
+        ]
+      },
+      "deployments": [
+        {
+          "id": "dep3",
+          "name": "Enterprise #3",
+          "servers": [
+            {
+              "name": "server-1",
+              "ip": "10.3.2.11",
+              "status": "running",
+              "health": "healthy"
+            },
+            {
+              "name": "server-2",
+              "ip": "10.3.2.12",
+              "status": "running",
+              "health": "healthy"
+            }
+          ],
+          "status": "running"
+        }
+      ],
+      "trafficDistribution": 33.4,
+      "healthStatus": "healthy"
+    }
+  ],
+  "applications": [
+    {
+      "id": "app1",
+      "name": "OCBC Mobile Banking",
+      "description": "Mobile banking application",
+      "deployedLanes": ["lane1", "lane2", "lane3"],
+      "deploymentType": "Virtual Servers",
+      "status": "deployed",
+      "createdAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "app2",
+      "name": "OCBC Internet Banking",
+      "description": "Web-based banking platform",
+      "deployedLanes": ["lane1", "lane2"],
+      "deploymentType": "Pool Members",
+      "status": "deployed",
+      "createdAt": "2024-01-20T14:30:00Z"
+    }
+  ],
+  "automationLogs": [
+    {
+      "id": "log1",
+      "timestamp": "2024-01-29T10:15:00Z",
+      "lane": "lane1",
+      "action": "lane_activated",
+      "user": "admin",
+      "details": "Lane 1 activated successfully",
+      "status": "success"
+    },
+    {
+      "id": "log2",
+      "timestamp": "2024-01-29T10:20:00Z",
+      "lane": "lane2",
+      "action": "deployment_created",
+      "user": "operator",
+      "details": "New application deployed to Lane 2",
+      "status": "success"
+    }
+  ],
+  "globalSettings": {
+    "healthCheckInterval": 10,
+    "circuitBreakerThreshold": 3,
+    "autoFailoverEnabled": true,
+    "maintenanceMode": false
+  }
+}
