@@ -11,8 +11,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including dev dependencies for build)
-# Install adapter-node for Docker deployment
-RUN npm ci && npm install --save-dev @sveltejs/adapter-node
+# adapter-node is already in package.json devDependencies
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
