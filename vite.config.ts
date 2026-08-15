@@ -9,7 +9,7 @@ export default defineConfig({
 	server: {
 		host: '0.0.0.0',
 		port: 5173,
-		allowedHosts: ['facc.ntt.limited']
+		allowedHosts: ['facc.ntt.limited', 'facc-dev.ntt.limited']
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
